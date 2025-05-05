@@ -11,6 +11,10 @@ import re
 
 register_heif_opener()
 
+load_btn = None
+rem_btn = None
+save_btn = None
+
 def label_style():
     return """
             QLabel {  
@@ -22,9 +26,13 @@ def label_style():
             """
 
 def clear_image(label):
+    global load_btn, rem_btn, save_btn
     label.clear()
     label.setPixmap(QPixmap())
     label.setStyleSheet(label_style())
+    load_btn.setEnabled(True)
+    rem_btn.setEnabled(True)
+    save_btn.setEnabled(True)
 
 def pil_to_pixmap(pil_image):
     buffer = io.BytesIO()
@@ -48,6 +56,7 @@ def get_btn_style():
             """
 
 def load_image(label):
+    global load_btn
     file_name, _ = QFileDialog.getOpenFileName(None, "Open Image File", "", "Image Files (*.png *.jpg *.jpeg *.bmp *.gif *.HEIC)")
     if file_name:
         if file_name.lower().endswith(".heic"):
@@ -57,8 +66,10 @@ def load_image(label):
             pixmap = QPixmap(file_name)
         label.setPixmap(pixmap.scaled(label.size(), Qt.KeepAspectRatio, Qt.SmoothTransformation))
         label.setAlignment(Qt.AlignCenter)
+        load_btn.setEnabled(False)
 
 def remove_bg(pixmap, label):
+    global rem_btn
     if not pixmap:
         QMessageBox.warning(None, "Error", "No image loaded.Please load an image first.")
         return
@@ -76,12 +87,14 @@ def remove_bg(pixmap, label):
         qt_img = pil_to_pixmap(output_image)
 
         label.setPixmap(qt_img.scaled(label.size(), Qt.KeepAspectRatio, Qt.SmoothTransformation))
+        rem_btn.setEnabled(False)
     
     except Exception as e:
         QMessageBox.critical(None, "Error", f"An error occurred: {str(e)}")
     
 
 def save_image(pixmap):
+    global save_btn
     if pixmap:
         pixmap_str = str(pixmap)
         base_name = re.sub(r'[<>]', '', pixmap_str).replace(' ', '_')
@@ -90,6 +103,7 @@ def save_image(pixmap):
             image = pixmap.toImage()
             if image.save(file_name, "PNG"):
                 QMessageBox.information(None, "Saved", "Image saved successfully!")
+                save_btn.setEnabled(False)
             else:
                 QMessageBox.warning(None, "Error", "Failed to save image.")
 
